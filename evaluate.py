@@ -8,7 +8,7 @@ with open("test-labels.txt") as input_file:
 
 assigned_labels = {}
 
-with open("answers.txt") as input_file:
+with open("nboutput.txt") as input_file:
 	for sentence in input_file:
 		sentence = sentence.strip("\n").split(" ")
 		assigned_labels[sentence[0]] = [sentence[1], sentence[2]]

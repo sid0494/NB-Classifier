@@ -1,9 +1,12 @@
+import sys
 import math
 import string
 from collections import defaultdict
 from operator import itemgetter
 
 stop_words = ['', 'a', 'about', 'above', 'after', 'again', 'against', 'all', 'am', 'an', 'and', 'any', 'are', 'as', 'at', 'be', 'because', 'been', 'before', 'being', 'below', 'between', 'both', 'but', 'by', 'cannot', 'could', 'did', 'do', 'does', 'doing', 'down', 'during', 'each', 'few', 'for', 'from', 'further', 'had', 'has', 'have', 'having', 'hel', 'her', 'here', 'hers', 'herself', 'him', 'himself', 'his', 'how', 'i', 'if', 'in', 'into', 'is', 'it', 'its', 'itself', 'me', 'more', 'most', 'my', 'myself', 'no', 'nor', 'not', 'of', 'off', 'on', 'once', 'only', 'or', 'other', 'ought', 'our', 'ours', 'ourselves', 'out', 'over', 'own', 'same', 'shel', 'should', 'so', 'some', 'such', 'than', 'that', 'the', 'their', 'theirs', 'them', 'themselves', 'then', 'there', 'these', 'this', 'those', 'through', 'to', 'too', 'under', 'until', 'up', 'very', 'was', 'were', 'what', 'when', 'where', 'which', 'while', 'who', 'whom', 'why', 'with', 'would', 'your']
+input_text_path = sys.argv[1]
+input_label_path = sys.argv[2]
 
 def tokenize(sentence):
 	
@@ -14,22 +17,15 @@ def tokenize(sentence):
 
 
 
-
-
-# my_string = "07I2RiEXiuvkfEkSiByp Just returned from a one night stay at the Knickerbocker, and I will not return. It came nowhere near being worth the price I paid. Hotel Burnham is twice the hotel at half the price! The bathroom was unbelieveably small and smelled terribly. We had to call the front desk twice before towels that we requested were delivered (which frankly may as well have been paper towels, nothing plush about them at all). We didn't have enough pillows and when we requested an extra it was never delivered. Room service cart was left outside our door all night. All in all, it was a very disappointing stay. The only redeeming quality of this hotel seems to be its location. And for me, it's just not worth it. "
-
-# print tokenize(my_string)
-
-
 documents = defaultdict()
-with open("train-text.txt") as input_file:
+with open(input_text_path) as input_file:
 	for sentence in input_file:
 		sr_no, tokens = tokenize(sentence.strip("\n"))
 		documents[sr_no] = tokens
 
 labels = {}
 document_count = {"positive":0.0, "negative":0.0, "truthful":0.0, "deceptive":0.0}
-with open("train-labels.txt") as input_file:
+with open(input_label_path) as input_file:
 	for sentence in input_file:
 		sentence = sentence.strip("\n").split(" ")
 		document_count[sentence[2]] += 1

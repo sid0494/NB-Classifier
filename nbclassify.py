@@ -1,9 +1,11 @@
+import sys
 import math
 import string
 from collections import defaultdict
 from operator import itemgetter
 
 stop_words = ['', 'a', 'about', 'above', 'after', 'again', 'against', 'all', 'am', 'an', 'and', 'any', 'are', 'as', 'at', 'be', 'because', 'been', 'before', 'being', 'below', 'between', 'both', 'but', 'by', 'cannot', 'could', 'did', 'do', 'does', 'doing', 'down', 'during', 'each', 'few', 'for', 'from', 'further', 'had', 'has', 'have', 'having', 'hel', 'her', 'here', 'hers', 'herself', 'him', 'himself', 'his', 'how', 'i', 'if', 'in', 'into', 'is', 'it', 'its', 'itself', 'me', 'more', 'most', 'my', 'myself', 'no', 'nor', 'not', 'of', 'off', 'on', 'once', 'only', 'or', 'other', 'ought', 'our', 'ours', 'ourselves', 'out', 'over', 'own', 'same', 'shel', 'should', 'so', 'some', 'such', 'than', 'that', 'the', 'their', 'theirs', 'them', 'themselves', 'then', 'there', 'these', 'this', 'those', 'through', 'to', 'too', 'under', 'until', 'up', 'very', 'was', 'were', 'what', 'when', 'where', 'which', 'while', 'who', 'whom', 'why', 'with', 'would', 'your']
+input_text_path = sys.argv[1]
 
 def tokenize(sentence):
 	
@@ -60,7 +62,7 @@ negative = 0.0
 truthful = 0.0
 deceptive = 0.0
 
-with open("test-text.txt") as input_file:
+with open(input_text_path) as input_file:
 	for sentence in input_file:
 		sr_no, tokens = tokenize(sentence.strip("\n"))
 		documents[sr_no] = tokens
@@ -86,7 +88,7 @@ classified_data_sentiments = classify_sentiments(documents, priors, conditional_
 classified_data_truthfulness = classify_truthfulness(documents, priors, conditional_probability)
 
 
-with open("answers.txt","w") as f:
+with open("nboutput.txt","w") as f:
 	for key in classified_data_sentiments.keys():
 		f.write(key + " " + str(classified_data_truthfulness[key]) + " " + str(classified_data_sentiments[key]) + "\n")
 
