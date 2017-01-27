@@ -20,75 +20,60 @@ def tokenize(sentence):
 documents = defaultdict()
 with open(input_text_path) as input_file:
 	for sentence in input_file:
-		sr_no, tokens = tokenize(sentence.strip("\n"))
+		sr_no, tokens = tokenize(sentence.rstrip())
 		documents[sr_no] = tokens
 
 labels = {}
-document_count = {"positive":0.0, "negative":0.0, "truthful":0.0, "deceptive":0.0}
+document_count = {"truthful&positive":0.0, "truthful&negative":0.0, "deceptive&positive":0.0, "deceptive&negative":0.0}
 with open(input_label_path) as input_file:
 	for sentence in input_file:
-		sentence = sentence.strip("\n").split(" ")
-		document_count[sentence[2]] += 1
-		document_count[sentence[1]] += 1
-		labels[sentence[0]] = {"sentiment": sentence[2], "truthfulness": sentence[1]}
+		sentence = sentence.rstrip().split(" ")
+		document_count[sentence[1]+"&"+sentence[2]] += 1
+		labels[sentence[0]] = sentence[1]+"&"+sentence[2]
 
-print labels
-scores = defaultdict(lambda: {"positive":1.0, "negative":1.0, "truthful":1.0, "deceptive":1.0})
+# print labels
+scores = defaultdict(lambda: {"truthful&positive":1.0, "truthful&negative":1.0, "deceptive&positive":1.0, "deceptive&negative":1.0})
 vocab = []
 
 for sr_no in documents.keys():
 	for token in documents[sr_no]:
-		scores[token][labels[sr_no]["sentiment"]] += 1
-		scores[token][labels[sr_no]["truthfulness"]] += 1
+		scores[token][labels[sr_no]] += 1
 		vocab.append(token)
 
-words_in_positive = 0
-words_in_negative = 0
-words_in_truthful = 0
-words_in_deceptive = 0
+words_in_tp = 0
+words_in_dn = 0
+words_in_tn = 0
+words_in_dp = 0
 
-positive = document_count["negative"]/(document_count["positive"]+document_count["negative"])
-negative = document_count["positive"]/(document_count["positive"]+document_count["negative"])
-truthful = document_count["truthful"]/(document_count["truthful"]+document_count["deceptive"])
-deceptive = document_count["deceptive"]/(document_count["truthful"]+document_count["deceptive"])
+tn = document_count["truthful&negative"]/(document_count["truthful&negative"] + document_count["deceptive&positive"] + document_count["truthful&positive"] + document_count["deceptive&negative"])
+dp = document_count["deceptive&positive"]/(document_count["truthful&negative"] + document_count["deceptive&positive"] + document_count["truthful&positive"] + document_count["deceptive&negative"])
+tp = document_count["truthful&positive"]/(document_count["truthful&negative"] + document_count["deceptive&positive"] + document_count["truthful&positive"] + document_count["deceptive&negative"])
+dn = document_count["deceptive&negative"]/(document_count["truthful&negative"] + document_count["deceptive&positive"] + document_count["truthful&positive"] + document_count["deceptive&negative"])
 
-print len(vocab) + 2*len(set(vocab))
+# print len(vocab) + 2*len(set(vocab))
 
 
 
 for key in scores.keys():
-	words_in_positive += scores[key]["positive"]
-	words_in_negative += scores[key]["negative"]
-	words_in_truthful += scores[key]["truthful"]
-	words_in_deceptive += scores[key]["deceptive"]
+	words_in_tp += scores[key]["truthful&positive"]
+	words_in_dn += scores[key]["deceptive&negative"]
+	words_in_tn += scores[key]["truthful&negative"]
+	words_in_dp += scores[key]["deceptive&positive"]
 
 # print "Positive: {} Negative: {} Truthful: {} Deceptive: {}\nTotal in sentiments: {} \nTotal in truthfulness: {}".format(a,b,c,d,a+b,c+d)
 
 
 with open("nbmodel.txt","w") as f:
 
-	f.write(str(math.log(positive)) + " " + str(math.log(negative)) + " " + str(math.log(truthful)) + " " + str(math.log(deceptive)) + "\n")
-	f.write(str(math.log(1.0/words_in_positive)) + " " + str(math.log(1.0/words_in_negative)) + " " + str(math.log(1.0/words_in_truthful)) + " " + str(math.log(1.0/words_in_deceptive)) + "\n")
+	f.write(str(math.log(tp)) + " " + str(math.log(dn)) + " " + str(math.log(tn)) + " " + str(math.log(dp)) + "\n")
+	f.write(str(math.log(1.0/words_in_tp)) + " " + str(math.log(1.0/words_in_dn)) + " " + str(math.log(1.0/words_in_tn)) + " " + str(math.log(1.0/words_in_dp)) + "\n")
 	for key in scores.keys():
 		f.write(key + " ")
-		scores[key]["positive"] = math.log(scores[key]["positive"]/words_in_positive)
-		f.write(str(scores[key]["positive"]) + " ")
-		scores[key]["negative"] = math.log(scores[key]["negative"]/words_in_negative)
-		f.write(str(scores[key]["negative"]) + " ")
-		scores[key]["truthful"] = math.log(scores[key]["truthful"]/words_in_truthful)
-		f.write(str(scores[key]["truthful"]) + " ")
-		scores[key]["deceptive"] = math.log(scores[key]["deceptive"]/words_in_deceptive)
-		f.write(str(scores[key]["deceptive"]) + "\n")
-
-
-positive = []
-negative = []
-for key in scores.keys():
-	positive.append((key, scores[key]["positive"]))
-	negative.append((key, scores[key]["negative"]))
-
-positive = sorted(positive, key = itemgetter(1))
-negative = sorted(negative, key = itemgetter(1))
-
-print document_count
-
+		scores[key]["truthful&positive"] = math.log(scores[key]["truthful&positive"]/words_in_tp)
+		f.write(str(scores[key]["truthful&positive"]) + " ")
+		scores[key]["deceptive&negative"] = math.log(scores[key]["deceptive&negative"]/words_in_dn)
+		f.write(str(scores[key]["deceptive&negative"]) + " ")
+		scores[key]["truthful&negative"] = math.log(scores[key]["truthful&negative"]/words_in_tn)
+		f.write(str(scores[key]["truthful&negative"]) + " ")
+		scores[key]["deceptive&positive"] = math.log(scores[key]["deceptive&positive"]/words_in_dp)
+		f.write(str(scores[key]["deceptive&positive"]) + "\n")

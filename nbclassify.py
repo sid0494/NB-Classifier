@@ -23,72 +23,54 @@ def calculate_probability(tokens, label, priors, conditional_probability):
 
 	return probability
 
-def classify_sentiments(documents, priors, conditional_probability):
+def classify(documents, priors, conditional_probability):
 
 	assigned_labels = {}
 
 	for sr_no in documents.keys():
-		positive = calculate_probability(documents[sr_no], "positive", priors, conditional_probability)
-		negative = calculate_probability(documents[sr_no], "negative", priors, conditional_probability)
+		tp = calculate_probability(documents[sr_no], "truthful&positive", priors, conditional_probability)
+		tn = calculate_probability(documents[sr_no], "truthful&negative", priors, conditional_probability)
+		dp = calculate_probability(documents[sr_no], "deceptive&positive", priors, conditional_probability)
+		dn = calculate_probability(documents[sr_no], "deceptive&negative", priors, conditional_probability)
 
-		if positive > negative:
-			assigned_labels[sr_no] = "positive"
-		else:
-			assigned_labels[sr_no] = "negative"
-
-	return assigned_labels
-
-def classify_truthfulness(documents, priors, conditional_probability):
-
-	assigned_labels = {}
-
-	for sr_no in documents.keys():
-		positive = calculate_probability(documents[sr_no], "truthful", priors, conditional_probability)
-		negative = calculate_probability(documents[sr_no], "deceptive", priors, conditional_probability)
-
-		if positive > negative:
-			assigned_labels[sr_no] = "truthful"
-		else:
-			assigned_labels[sr_no] = "deceptive"
+		assigned_labels[sr_no] = sorted([(tp,"truthful positive"),(tn, "truthful negative"),(dp, "deceptive positive"),(dn, "deceptive negative")], key = itemgetter(0))[-1][1]
 
 	return assigned_labels
 
 
 documents = defaultdict()
 priors = {}
-conditional_probability = defaultdict(lambda: {"positive": 0.0, "negative": 0.0, "truthful": 0.0, "deceptive": 0.0})
-positive = 0.0
-negative = 0.0
-truthful = 0.0
-deceptive = 0.0
+conditional_probability = defaultdict(lambda: {"truthful&positive":0.0, "truthful&negative":0.0, "deceptive&positive":0.0, "deceptive&negative":0.0})
+tp = 0.0
+tn = 0.0
+dp = 0.0
+dn = 0.0
 
 with open(input_text_path) as input_file:
 	for sentence in input_file:
-		sr_no, tokens = tokenize(sentence.strip("\n"))
+		sr_no, tokens = tokenize(sentence.rstrip())
 		documents[sr_no] = tokens
 
 with open("nbmodel.txt") as f:
-	data = f.readline().strip("\n").split(" ")
-	priors = {"positive": float(data[0]), "negative": float(data[1]), "truthful": float(data[2]), "deceptive": float(data[3])}
-	data = f.readline().strip("\n").split(" ")
+	data = f.readline().rstrip().split(" ")
+	priors = {"truthful&positive": float(data[0]), "deceptive&negative": float(data[1]), "truthful&negative": float(data[2]), "deceptive&positive": float(data[3])}
+	data = f.readline().rstrip().split(" ")
 	# positive = float(data[0])
 	# negative = float(data[1])
 	# truthful = float(data[2])
 	# deceptive = float(data[3])
-	conditional_probability = defaultdict(lambda: {"positive": positive, "negative": negative, "truthful": truthful, "deceptive": deceptive})
+	conditional_probability = defaultdict(lambda: {"truthful&positive": tp, "deceptive&negative": dn, "truthful&negative": tn, "deceptive&positive": dp})
 	count = 0
 	for sentence in f:
 		count += 1
-		print str(count) + sentence 
+		# print str(count) + sentence 
 		# raw_input()
-		data = sentence.strip("\n").split(" ")
-		conditional_probability[data[0]] = {"positive": float(data[1]), "negative": float(data[2]), "truthful": float(data[3]), "deceptive": float(data[4])}
+		data = sentence.rstrip().split(" ")
+		conditional_probability[data[0]] = {"truthful&positive": float(data[1]), "deceptive&negative": float(data[2]), "truthful&negative": float(data[3]), "deceptive&positive": float(data[4])}
 
-classified_data_sentiments = classify_sentiments(documents, priors, conditional_probability)
-classified_data_truthfulness = classify_truthfulness(documents, priors, conditional_probability)
-
+classified_data = classify(documents, priors, conditional_probability)
 
 with open("nboutput.txt","w") as f:
-	for key in classified_data_sentiments.keys():
-		f.write(key + " " + str(classified_data_truthfulness[key]) + " " + str(classified_data_sentiments[key]) + "\n")
+	for key in classified_data.keys():
+		f.write(key + " " + str(classified_data[key]) + "\n")
 
